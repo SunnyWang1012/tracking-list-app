@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Tracker</title>
+    <link rel="stylesheet" href="worktracker-styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-briefcase"></i> Work Tracker</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="newItemBtn">
+                        <i class="fas fa-plus"></i> New Item
+                    </button>
+                    <button class="btn btn-secondary" id="manageRefDataBtn">
+                        <i class="fas fa-cog"></i> Manage Lists
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- View Switcher -->
+            <div class="view-switcher">
+                <button class="view-btn active" id="todayViewBtn">
+                    <i class="fas fa-calendar-day"></i>
+                    Today's Items
+                    <span class="count" id="todayCount">0</span>
+                </button>
+                <button class="view-btn" id="allViewBtn">
+                    <i class="fas fa-list"></i>
+                    All Items
+                    <span class="count" id="allCount">0</span>
+                </button>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <!-- Quick Filters -->
+                <div class="quick-filters">
+                    <button class="filter-btn quick-filter" data-filter="urgent">
+                        <i class="fas fa-exclamation-circle"></i> Urgent
+                    </button>
+                    <button class="filter-btn quick-filter" data-filter="dueToday">
+                        <i class="fas fa-calendar-check"></i> Due Today/Overdue
+                    </button>
+                    <button class="filter-btn quick-filter" data-filter="completed">
+                        <i class="fas fa-check-circle"></i> Completed
+                    </button>
+                </div>
+
+                <!-- Advanced Filters -->
+                <div class="advanced-filters">
+                    <select class="filter-select advanced-filter" data-filter="releaseVersion">
+                        <option value="">All Releases</option>
+                    </select>
+                    <select class="filter-select advanced-filter" data-filter="channel">
+                        <option value="">All Channels</option>
+                    </select>
+                    <select class="filter-select advanced-filter" data-filter="action">
+                        <option value="">All Actions</option>
+                    </select>
+                    <select class="filter-select advanced-filter" data-filter="stakeholder">
+                        <option value="">All Stakeholders</option>
+                    </select>
+                    <select class="filter-select advanced-filter" data-filter="status">
+                        <option value="">All Status</option>
+                        <option value="action-needed">Action Needed</option>
+                        <option value="awaiting-owner">Awaiting Owner</option>
+                        <option value="resolved">Resolved</option>
+                    </select>
+                    <select class="filter-select advanced-filter" id="sortSelect">
+                        <option value="urgent">Sort: Urgent First</option>
+                        <option value="dueDate">Sort: Due Date</option>
+                        <option value="lastUpdated">Sort: Last Updated</option>
+                        <option value="createdDate">Sort: Created Date</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Items Container -->
+            <div class="items-section">
+                <div class="items-container" id="itemsContainer">
+                    <!-- Work items will be rendered here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <i class="fas fa-inbox"></i>
+                    <h3>No work items found</h3>
+                    <p>Start by adding your first work item or adjust your filters.</p>
+                    <button class="btn btn-primary btn-small" onclick="document.getElementById('newItemBtn').click()">
+                        <i class="fas fa-plus"></i> Add First Item
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Work Item Modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">New Work Item</h2>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="itemForm" class="item-form">
+                <div class="form-grid">
+                    <!-- Left Column -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="itemTitle">Title *</label>
+                            <input type="text" id="itemTitle" required placeholder="Enter work item title...">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemContent">Content</label>
+                            <textarea id="itemContent" rows="4" placeholder="Detailed description..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemDueDate">Due Date</label>
+                            <input type="date" id="itemDueDate">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemReleaseVersion">Release Version</label>
+                            <select id="itemReleaseVersion">
+                                <option value="">Select release...</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column -->
+                    <div class="form-column">
+                        <div class="form-group">
+                            <label for="itemChannel">Channel *</label>
+                            <select id="itemChannel" required>
+                                <option value="">Select channel...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemAction">Action</label>
+                            <select id="itemAction">
+                                <option value="">Select action...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemStakeholder">Stakeholder</label>
+                            <select id="itemStakeholder">
+                                <option value="">Select stakeholder...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemContact">Contact / Group</label>
+                            <select id="itemContact">
+                                <option value="">Select contact or group...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="itemUrgent">
+                                <span>Mark as Urgent</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelItemBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="refDataModal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>Manage Settings</h2>
+                <button class="modal-close" id="closeRefModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="releases">Release Versions</button>
+                <button class="tab-btn" data-tab="channels">Channels</button>
+                <button class="tab-btn" data-tab="stakeholders">Stakeholders</button>
+                <button class="tab-btn" data-tab="contacts">Contacts</button>
+                <button class="tab-btn" data-tab="groups">Contact Groups</button>
+            </div>
+            
+            <div class="settings-content">
+                <!-- Release Versions Tab -->
+                <div class="tab-content active" id="releases-tab">
+                    <div class="settings-section">
+                        <h3>Release Versions</h3>
+                        <div class="add-item-form">
+                            <div class="contact-search-container">
+                                <input type="text" id="newRelease" placeholder="Add new release version..." class="contact-search-input">
+                                <div class="contact-search-dropdown" id="releaseSearchDropdown">
+                                    <!-- Search results will appear here -->
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="workTracker.addReleaseVersion()">Add</button>
+                        </div>
+                        <div class="items-list" id="releasesList">
+                            <!-- Release versions will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Channels Tab -->
+                <div class="tab-content" id="channels-tab">
+                    <div class="settings-section">
+                        <h3>Channels</h3>
+                        <div class="add-item-form">
+                            <input type="text" id="newChannel" placeholder="Add new channel...">
+                            <button class="btn btn-primary" onclick="workTracker.addChannel()">Add</button>
+                        </div>
+                        <div class="items-list" id="channelsList">
+                            <!-- Channels will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stakeholders Tab -->
+                <div class="tab-content" id="stakeholders-tab">
+                    <div class="settings-section">
+                        <h3>Stakeholders</h3>
+                        <div class="add-item-form">
+                            <input type="text" id="newStakeholder" placeholder="Add new stakeholder...">
+                            <button class="btn btn-primary" onclick="workTracker.addStakeholder()">Add</button>
+                        </div>
+                        <div class="items-list" id="stakeholdersList">
+                            <!-- Stakeholders will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contacts Tab -->
+                <div class="tab-content" id="contacts-tab">
+                    <div class="settings-section">
+                        <h3>Contacts</h3>
+                        <div class="add-item-form">
+                            <div class="contact-search-container">
+                                <input type="text" id="newContactName" placeholder="Contact name..." class="contact-search-input">
+                                <div class="contact-search-dropdown" id="contactSearchDropdown">
+                                    <!-- Search results will appear here -->
+                                </div>
+                            </div>
+                            <input type="email" id="newContactEmail" placeholder="Email address...">
+                            <button class="btn btn-primary" onclick="workTracker.addContact()">Add</button>
+                        </div>
+                        <div class="items-list" id="contactsList">
+                            <!-- Contacts will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact Groups Tab -->
+                <div class="tab-content" id="groups-tab">
+                    <div class="settings-section">
+                        <h3>Contact Groups</h3>
+                        <div class="add-item-form">
+                            <input type="text" id="newGroupName" placeholder="Group name...">
+                            <div class="group-contacts-container">
+                                <div class="group-search-container">
+                                    <input type="text" id="groupContactSearch" placeholder="Search and add contacts..." class="group-search-input">
+                                    <div class="contact-search-dropdown" id="groupContactSearchDropdown">
+                                        <!-- Search results will appear here -->
+                                    </div>
+                                </div>
+                                <div class="group-contacts-list" id="groupContactsList">
+                                    <!-- Selected contacts will appear here -->
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="workTracker.addContactGroup()">Add</button>
+                        </div>
+                        <div class="items-list" id="groupsList">
+                            <!-- Contact groups will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Contact Group Modal -->
+    <div class="modal" id="editGroupModal">
+        <div class="modal-content settings-modal">
+            <div class="modal-header">
+                <h2>Edit Contact Group</h2>
+                <button class="modal-close" id="closeEditGroupModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="settings-content">
+                <div class="settings-section">
+                    <div class="add-item-form">
+                        <input type="text" id="editGroupName" placeholder="Group name...">
+                        <div class="group-contacts-container">
+                            <div class="group-search-container">
+                                <input type="text" id="editGroupContactSearch" placeholder="Search and add contacts..." class="group-search-input">
+                                <div class="contact-search-dropdown" id="editGroupContactSearchDropdown">
+                                    <!-- Search results will appear here -->
+                                </div>
+                            </div>
+                            <div class="group-contacts-list" id="editGroupContactsList">
+                                <!-- Selected contacts will appear here -->
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="workTracker.saveEditedGroup()">Save Changes</button>
+                        <button class="btn btn-secondary" onclick="workTracker.closeEditGroupModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="worktracker-app.js"></script>
+</body>
+</html>

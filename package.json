@@ -1,0 +1,33 @@
+{
+  "name": "tracking-list-app",
+  "version": "1.0.0",
+  "description": "A personal work-tracking web application designed for DM/ePO roles to manage multiple work threads across Email, Teams, JIRA, and Confluence.",
+  "main": "worktracker.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "work-tracking",
+    "task-management",
+    "productivity",
+    "dm",
+    "epo",
+    "javascript",
+    "local-storage",
+    "no-backend"
+  ],
+  "author": "Sunny Wang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/tracking-list-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/tracking-list-app/issues"
+  },
+  "homepage": "https://github.com/yourusername/tracking-list-app#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}
