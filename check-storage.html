@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check localStorage Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .data-display { background: #f5f5f5; padding: 10px; margin: 10px 0; }
+        .item { background: white; padding: 10px; margin: 5px 0; border-left: 4px solid #007bff; }
+        .missing { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>localStorage Data Diagnostic</h1>
+    
+    <div class="section">
+        <h2>Current localStorage Contents</h2>
+        <button onclick="checkStorage()">Check Storage</button>
+        <div id="storage-content" class="data-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Work Items Analysis</h2>
+        <button onclick="analyzeWorkItems()">Analyze Items</button>
+        <div id="items-analysis" class="data-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Search for "Test Case" Items</h2>
+        <button onclick="searchTestItems()">Search</button>
+        <div id="search-results" class="data-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Data Recovery Options</h2>
+        <button onclick="showRecoveryOptions()">Show Recovery</button>
+        <div id="recovery-options" class="data-display"></div>
+    </div>
+
+    <script>
+        function checkStorage() {
+            const contentDiv = document.getElementById('storage-content');
+            
+            try {
+                const stored = localStorage.getItem('workTrackerData');
+                
+                if (!stored) {
+                    contentDiv.innerHTML = '<div class="missing">No data found in localStorage</div>';
+                    return;
+                }
+                
+                const data = JSON.parse(stored);
+                
+                contentDiv.innerHTML = `
+                    <h3>Storage Summary:</h3>
+                    <p><strong>Work Items:</strong> ${data.workItems ? data.workItems.length : 0}</p>
+                    <p><strong>Reference Data:</strong> ${data.referenceData ? 'Present' : 'Missing'}</p>
+                    ${data.referenceData ? `
+                        <p><strong>Contacts:</strong> ${data.referenceData.contacts ? data.referenceData.contacts.length : 0}</p>
+                        <p><strong>Groups:</strong> ${data.referenceData.groups ? data.referenceData.groups.length : 0}</p>
+                        <p><strong>Release Versions:</strong> ${data.referenceData.releaseVersions ? data.referenceData.releaseVersions.length : 0}</p>
+                    ` : ''}
+                    <h3>Raw Data:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="missing">Error reading storage: ${error.message}</div>`;
+            }
+        }
+
+        function analyzeWorkItems() {
+            const contentDiv = document.getElementById('items-analysis');
+            
+            try {
+                const stored = localStorage.getItem('workTrackerData');
+                if (!stored) {
+                    contentDiv.innerHTML = '<div class="missing">No data found</div>';
+                    return;
+                }
+                
+                const data = JSON.parse(stored);
+                const items = data.workItems || [];
+                
+                if (items.length === 0) {
+                    contentDiv.innerHTML = '<div class="missing">No work items found</div>';
+                    return;
+                }
+                
+                const analysis = items.map(item => ({
+                    title: item.title,
+                    created: new Date(item.createdAt).toLocaleString(),
+                    due: item.dueDate,
+                    status: item.status,
+                    completed: item.completed
+                }));
+                
+                contentDiv.innerHTML = `
+                    <h3>Work Items (${items.length}):</h3>
+                    ${analysis.map(item => `
+                        <div class="item">
+                            <strong>${item.title}</strong><br>
+                            Created: ${item.created}<br>
+                            Due: ${item.due}<br>
+                            Status: ${item.status}<br>
+                            Completed: ${item.completed}
+                        </div>
+                    `).join('')}
+                `;
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="missing">Error analyzing items: ${error.message}</div>`;
+            }
+        }
+
+        function searchTestItems() {
+            const contentDiv = document.getElementById('search-results');
+            
+            try {
+                const stored = localStorage.getItem('workTrackerData');
+                if (!stored) {
+                    contentDiv.innerHTML = '<div class="missing">No data found</div>';
+                    return;
+                }
+                
+                const data = JSON.parse(stored);
+                const items = data.workItems || [];
+                
+                const testItems = items.filter(item => 
+                    item.title.toLowerCase().includes('test case') ||
+                    item.content.toLowerCase().includes('test case')
+                );
+                
+                if (testItems.length === 0) {
+                    contentDiv.innerHTML = '<div class="missing">No "Test Case" items found</div>';
+                    return;
+                }
+                
+                contentDiv.innerHTML = `
+                    <h3>Found ${testItems.length} "Test Case" items:</h3>
+                    ${testItems.map(item => `
+                        <div class="item">
+                            <strong>${item.title}</strong><br>
+                            ${item.content}<br>
+                            Created: ${new Date(item.createdAt).toLocaleString()}<br>
+                            Status: ${item.status}
+                        </div>
+                    `).join('')}
+                `;
+            } catch (error) {
+                contentDiv.innerHTML = `<div class="missing">Error searching: ${error.message}</div>`;
+            }
+        }
+
+        function showRecoveryOptions() {
+            const contentDiv = document.getElementById('recovery-options');
+            
+            contentDiv.innerHTML = `
+                <h3>Possible Causes:</h3>
+                <ul>
+                    <li><strong>Data corruption:</strong> The merge function fix may have affected existing data</li>
+                    <li><strong>Browser issues:</strong> Private browsing mode or cleared cache</li>
+                    <li><strong>Filter settings:</strong> Item might be filtered out in current view</li>
+                    <li><strong>Date issues:</strong> Due date might be filtering it out</li>
+                </ul>
+                
+                <h3>Recovery Steps:</h3>
+                <ol>
+                    <li>Open the main app: <button onclick="window.open('worktracker.html', '_blank')">Open WorkTracker</button></li>
+                    <li>Check "All Items" view (not just "Today")</li>
+                    <li>Clear all filters and check completed items</li>
+                    <li>If still missing, the data may have been lost during the merge fix</li>
+                </ol>
+                
+                <h3>Manual Recovery:</h3>
+                <p>If you remember the details, you can recreate the item. The fixes ensure it won't disappear again.</p>
+            `;
+        }
+        
+        // Auto-check on page load
+        window.onload = function() {
+            checkStorage();
+        };
+    </script>
+</body>
+</html>

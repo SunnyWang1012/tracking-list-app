@@ -51,76 +51,123 @@ class WorkTracker {
     }
 
     async loadData() {
-        const stored = localStorage.getItem('workTrackerData');
-        if (stored) {
-            const data = JSON.parse(stored);
-            this.workItems = data.workItems || [];
-            
-            // Properly merge reference data, adding new default items
-            const savedRefData = data.referenceData || {};
-            
-            // Merge arrays, ensuring new defaults are included
-            this.referenceData = {
-                releaseVersions: this.mergeArray(this.referenceData.releaseVersions, savedRefData.releaseVersions || []),
-                channels: this.mergeArray(this.referenceData.channels, savedRefData.channels || []),
-                actions: { ...this.referenceData.actions, ...savedRefData.actions },
-                stakeholders: this.mergeArray(this.referenceData.stakeholders, savedRefData.stakeholders || []),
-                contacts: this.mergeArray(this.referenceData.contacts, savedRefData.contacts || []),
-                groups: this.mergeArray(this.referenceData.groups, savedRefData.groups || [])
-            };
-        } else {
-            // Initialize with sample data
-            this.workItems = [
-                {
-                    id: this.generateId(),
-                    title: 'Follow up on Intel validation results',
-                    content: 'Need to get confirmation from Intel team about the DVT validation results and address any concerns they have.',
-                    releaseVersion: 'Archon 6.13',
-                    dueDate: this.getToday(),
-                    channel: 'Email',
-                    action: 'Reply',
-                    stakeholder: 'Intel',
-                    contact: { name: 'John Intel', email: 'john@intel.com' },
-                    isUrgent: true,
-                    status: 'action-needed',
-                    completed: false,
-                    createdAt: new Date().toISOString(),
-                    lastUpdatedAt: new Date().toISOString()
-                },
-                {
-                    id: this.generateId(),
-                    title: 'Update JIRA story with test cases',
-                    content: 'Add the new test cases to the JIRA story for the power management feature.',
-                    releaseVersion: 'Archon 6.13',
-                    dueDate: this.getToday(),
-                    channel: 'JIRA',
-                    action: 'Update',
-                    stakeholder: 'Dell',
-                    contact: { name: 'Sarah Dell', email: 'sarah@dell.com' },
-                    isUrgent: false,
-                    status: 'awaiting-owner',
-                    completed: false,
-                    createdAt: new Date().toISOString(),
-                    lastUpdatedAt: new Date().toISOString()
-                }
-            ];
-            await this.saveData();
+        try {
+            const stored = localStorage.getItem('workTrackerData');
+            if (stored) {
+                const data = JSON.parse(stored);
+                this.workItems = data.workItems || [];
+                
+                // Properly merge reference data, adding new default items
+                const savedRefData = data.referenceData || {};
+                
+                // Merge arrays, ensuring new defaults are included
+                this.referenceData = {
+                    releaseVersions: this.mergeArray(this.referenceData.releaseVersions, savedRefData.releaseVersions || []),
+                    channels: this.mergeArray(this.referenceData.channels, savedRefData.channels || []),
+                    actions: { ...this.referenceData.actions, ...savedRefData.actions },
+                    stakeholders: this.mergeArray(this.referenceData.stakeholders, savedRefData.stakeholders || []),
+                    contacts: this.mergeContacts(this.referenceData.contacts, savedRefData.contacts || []),
+                    groups: this.mergeGroups(this.referenceData.groups, savedRefData.groups || [])
+                };
+            } else {
+                // Initialize with sample data
+                this.workItems = [
+                    {
+                        id: this.generateId(),
+                        title: 'Follow up on Intel validation results',
+                        content: 'Need to get confirmation from Intel team about the DVT validation results and address any concerns they have.',
+                        releaseVersion: 'Archon 6.13',
+                        dueDate: this.getToday(),
+                        channel: 'Email',
+                        action: 'Reply',
+                        stakeholder: 'Intel',
+                        contact: { name: 'John Intel', email: 'john@intel.com' },
+                        isUrgent: true,
+                        status: 'action-needed',
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        lastUpdatedAt: new Date().toISOString()
+                    },
+                    {
+                        id: this.generateId(),
+                        title: 'Update JIRA story with test cases',
+                        content: 'Add the new test cases to the JIRA story for the power management feature.',
+                        releaseVersion: 'Archon 6.13',
+                        dueDate: this.getToday(),
+                        channel: 'JIRA',
+                        action: 'Update',
+                        stakeholder: 'Dell',
+                        contact: { name: 'Sarah Dell', email: 'sarah@dell.com' },
+                        isUrgent: false,
+                        status: 'awaiting-owner',
+                        completed: false,
+                        createdAt: new Date().toISOString(),
+                        lastUpdatedAt: new Date().toISOString()
+                    }
+                ];
+                await this.saveData();
+            }
+        } catch (error) {
+            console.error('Error loading data from localStorage:', error);
+            // Initialize with default data if loading fails
+            this.workItems = [];
+            // Keep the default reference data from constructor
         }
     }
 
     mergeArray(defaultArray, savedArray) {
         // Combine default and saved arrays, remove duplicates, and sort
+        // Works for string arrays only
         const combined = [...defaultArray, ...savedArray];
         const unique = [...new Set(combined)];
         return unique.sort();
     }
 
+    mergeContacts(defaultContacts, savedContacts) {
+        // Merge contact arrays, avoiding duplicates by email
+        const contactMap = new Map();
+        
+        // Add default contacts first
+        defaultContacts.forEach(contact => {
+            contactMap.set(contact.email, contact);
+        });
+        
+        // Add saved contacts, overriding defaults if email matches
+        savedContacts.forEach(contact => {
+            contactMap.set(contact.email, contact);
+        });
+        
+        return Array.from(contactMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    mergeGroups(defaultGroups, savedGroups) {
+        // Merge group arrays, avoiding duplicates by name
+        const groupMap = new Map();
+        
+        // Add default groups first
+        defaultGroups.forEach(group => {
+            groupMap.set(group.name, group);
+        });
+        
+        // Add saved groups, overriding defaults if name matches
+        savedGroups.forEach(group => {
+            groupMap.set(group.name, group);
+        });
+        
+        return Array.from(groupMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
     async saveData() {
-        const data = {
-            workItems: this.workItems,
-            referenceData: this.referenceData
-        };
-        localStorage.setItem('workTrackerData', JSON.stringify(data));
+        try {
+            const data = {
+                workItems: this.workItems,
+                referenceData: this.referenceData
+            };
+            localStorage.setItem('workTrackerData', JSON.stringify(data));
+        } catch (error) {
+            console.error('Error saving data to localStorage:', error);
+            alert('There was an error saving your data. Your browser may be in private mode or storage may be full.');
+        }
     }
 
     generateId() {
